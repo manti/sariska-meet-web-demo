@@ -11537,9 +11537,9 @@ sanitize.css@^10.0.0:
   resolved "https://registry.yarnpkg.com/sanitize.css/-/sanitize.css-10.0.0.tgz#b5cb2547e96d8629a60947544665243b1dc3657a"
   integrity sha512-vTxrZz4dX5W86M6oVWVdOVe72ZiPs41Oi7Z6Km4W5Turyz28mrXSJhhEBZoRtzJWIv3833WKVwLSDWWkEfupMg==
 
-"sariska-media-transport@git://github.com/SariskaIO/sariska-media-transport.git#v2.0.54":
+"sariska-media-transport@https://github.com/SariskaIO/sariska-media-transport.git#v2.0.55":
   version "1.0.8"
-  resolved "git://github.com/SariskaIO/sariska-media-transport.git#d7c1e2f459891560fefbc19f585976caafead804"
+  resolved "https://github.com/SariskaIO/sariska-media-transport.git#1d26f3ea817ed4f765ac9652d68b21185a452e95"
   dependencies:
     "@babel/preset-env" "^7.21.5"
     "@hapi/bourne" "^2.0.0"
