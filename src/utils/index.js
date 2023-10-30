@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import {GENERATE_TOKEN_URL, GET_PRESIGNED_URL, ENTER_FULL_SCREEN_MODE} from "../constants";
+import {GENERATE_TOKEN_URL, GET_PRESIGNED_URL, ENTER_FULL_SCREEN_MODE, LIVE_STREAMING_START_URL, LIVE_STREAMING_STOP_URL} from "../constants";
 import linkifyHtml from 'linkify-html';
 
 const Compressor = require('compressorjs');
@@ -75,6 +75,55 @@ export async function getToken(profile, name, avatarColor) {
             return json.token;
         } else {
             console.log(response.status);
+        }
+    } catch (error) {
+        console.log('error', error);
+    }
+}
+
+export async function startStreamingInSRSMode(roomName) {
+    const body = {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem("SARISKA_TOKEN")}`
+        },
+        body: JSON.stringify({
+            room_name: roomName
+        })
+    };
+    try {
+        const response = await fetch(LIVE_STREAMING_START_URL, body);
+        console.log('response startStreamingInSRSMode', response);
+        if (response.started) {
+            const json = await response.json();
+            return json;
+        } else {
+            console.log(response.message);
+        }
+    } catch (error) {
+        console.log('error', error);
+    }
+}
+
+export async function stopStreamingInSRSMode(roomName) {
+    const body = {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem("SARISKA_TOKEN")}`
+        },
+        body: JSON.stringify({
+            room_name: roomName
+        })
+    };
+    try {
+        const response = await fetch(LIVE_STREAMING_STOP_URL, body);
+        if (!response.started) {
+            const json = await response.json();
+            return json;
+        } else {
+            console.log("Got some error in stopping streaming");
         }
     } catch (error) {
         console.log('error', error);

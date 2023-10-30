@@ -7,7 +7,8 @@ import {
     GOOGLE_API_STATES,
     GOOGLE_API_CLIENT_LIBRARY_URL,
     CREATE_YOUTUBE_LIVE_STREAMS,
-    CREATE_YOUTUBE_LIVE_BROADCASTS
+    CREATE_YOUTUBE_LIVE_BROADCASTS,
+    GOOGLE_API_CLIENT_ID
 } from '../constants';
 
 import {store} from "../store";
@@ -29,7 +30,7 @@ const googleApi = {
         return this.get()
             .then(() => {
                 if (store.getState().profile.googleAPIState === GOOGLE_API_STATES.NEEDS_LOADING) {
-                    return googleApi.initializeClient("621897095595-k7tr68mgfrhm1935cqdq5l2vg8u7ltu8.apps.googleusercontent.com", true, true);
+                    return googleApi.initializeClient(GOOGLE_API_CLIENT_ID, true, true);
                 }
                 return Promise.resolve();
             })

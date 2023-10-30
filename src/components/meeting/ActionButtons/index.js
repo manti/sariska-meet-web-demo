@@ -1,6 +1,7 @@
 import {
   Badge,
   Box,
+  Button,
   Drawer,
   Hidden,
   makeStyles,
@@ -27,6 +28,7 @@ import ViewListIcon from "@material-ui/icons/ViewList";
 import ViewComfyIcon from "@material-ui/icons/ViewComfy";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 import CloseIcon from '@material-ui/icons/Close';
+import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import {
   addLocalTrack,
   localTrackMutedChanged,
@@ -43,6 +45,7 @@ import {
   WHITEBOARD,
   GET_PRESENTATION_STATUS,
   RECEIVED_PRESENTATION_STATUS,
+  streamingMode,
 } from "../../../constants";
 import {
   setFullScreen,
@@ -67,6 +70,7 @@ import DrawerBox from "../../shared/DrawerBox";
 import { addSubtitle } from "../../../store/actions/subtitle";
 import { showSnackbar } from "../../../store/actions/snackbar";
 import StyledTooltip from "../../shared/StyledTooltip";
+import LiveStreamingDetails from "../../shared/LiveStreamingDetails";
 
 const StyledBadge = withStyles((theme) => ({
   badge: {
@@ -174,6 +178,27 @@ const useStyles = makeStyles((theme) => ({
       fontSize: "24px",
     },
   },
+  liveBox: {
+    display: 'flex',
+    alignItems: 'center',
+    border: `1px solid ${color.red}`,
+    borderRadius: '30px',
+    paddingLeft: '8px',
+    paddingRight: '8px',
+    marginLeft: '8px',
+    '&:hover': {
+      cursor: 'pointer'
+    }
+  },
+  dot: {
+    padding: '2px !important',
+    fontSize: '1rem'
+  },
+  live: {
+    color: color.red,
+    padding: '6px 0',
+    minWidth: '36px',
+  },
   subIcon: {
     border: "none !important",
     marginRight: "0px !important",
@@ -258,6 +283,9 @@ const ActionButtons = ({ dominantSpeakerId }) => {
   const [raiseHand, setRaiseHand] = useState(false);
   const [featureStates, setFeatureStates] = useState({});
   const [chatState, setChatState] = React.useState({
+    right: false,
+  });
+  const [liveState, setLiveState] = React.useState({
     right: false,
   });
   const [participantState, setParticipantState] = React.useState({
@@ -350,6 +378,15 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     setRaiseHand(false);
   };
 
+  const toggleLiveDrawer = (anchor, open) => (event) => {
+    if (
+      event.type === "keydown" &&
+      (event.key === "Tab" || event.key === "Shift")
+    ) {
+      return;
+    }
+    setLiveState({ ...liveState, [anchor]: open });
+  };
   const toggleParticipantDrawer = (anchor, open) => (event) => {
     if (
       event.type === "keydown" &&
@@ -359,6 +396,20 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     }
     setParticipantState({ ...participantState, [anchor]: open });
   };
+
+  const liveList = (anchor) => (
+    <>
+      <Box className={classes.participantHeader}>
+        <Typography variant="h6" className={classes.title}>
+          Live Streaming
+        </Typography>
+        <Hidden mdUp>
+          <CloseIcon onClick={toggleLiveDrawer("right", false)}/>
+        </Hidden>
+      </Box>
+      <LiveStreamingDetails />
+    </>
+  );
 
   const participantList = (anchor) => (
     <>
@@ -645,22 +696,22 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     conference.addEventListener(
       SariskaMediaTransport.events.conference.RECORDER_STATE_CHANGED,
       (data) => {
-        if (data._status === "on" && data._mode === "stream") {
-          conference.setLocalParticipantProperty("streaming", true);
-          dispatch(
-            showSnackbar({ autoHide: true, message: "Live streaming started" })
-          );
-          action({ key: "streaming", value: true });
-          localStorage.setItem("streaming_session_id", data?._sessionID);
-        }
+          if (streamingMode !== 'srs' && data._statusFromJicofo === "on" && data._mode === "stream") {
+            conference.setLocalParticipantProperty("streaming", true);
+            dispatch(
+              showSnackbar({ autoHide: true, message: "Live streaming started" })
+            );
+            action({ key: "streaming", value: true });
+            localStorage.setItem("streaming_session_id", data?._sessionID);
+          }
 
-        if (data._status === "off" && data._mode === "stream") {
-          conference.removeLocalParticipantProperty("streaming");
-          dispatch(
-            showSnackbar({ autoHide: true, message: "Live streaming stopped" })
-          );
-          action({ key: "streaming", value: false });
-        }
+          if (streamingMode !== 'srs' && data._statusFromJicofo === "off" && data._mode === "stream") {
+            conference.removeLocalParticipantProperty("streaming");
+            dispatch(
+              showSnackbar({ autoHide: true, message: "Live streaming stopped" })
+            );
+            action({ key: "streaming", value: false });
+          }
 
         if (data._statusFromJicofo === "on" && data._mode === "file") {
           conference.setLocalParticipantProperty("recording", true);
@@ -679,7 +730,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           action({ key: "recording", value: false });
         }
 
-        if (data._mode === "stream" && data._error) {
+        if (streamingMode !== 'srs' && data._mode === "stream" && data._error) {
           conference.removeLocalParticipantProperty("streaming");
           dispatch(
             showSnackbar({
@@ -719,9 +770,23 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         </Box>
       </Hidden>
       <Hidden smDown>
+        <Box sx={{display: 'flex'}}>
         <StyledTooltip title="Leave Call">
           <CallEndIcon onClick={leaveConference} className={classes.end} />
         </StyledTooltip>
+        <StyledTooltip title="Go Live">
+          <Box className={classes.liveBox} onClick={toggleLiveDrawer("right", true)} >          
+            <FiberManualRecordIcon className={classes.dot} />
+            <Button className={classes.live}>Live</Button>
+          </Box>
+        </StyledTooltip>
+        </Box>
+        <DrawerBox
+          open={liveState["right"]}
+          onClose={toggleLiveDrawer("right", false)}
+        >
+          {liveList("right")}
+        </DrawerBox>
       </Hidden>
       <Box className={classes.permissions}>
         <StyledTooltip
@@ -772,9 +837,9 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           )}
         </StyledTooltip>
         <Hidden smDown>
-        <StyledTooltip title="Participants Details">
-          <GroupIcon onClick={toggleParticipantDrawer("right", true)} />
-        </StyledTooltip>
+          <StyledTooltip title="Participants Details">
+            <GroupIcon onClick={toggleParticipantDrawer("right", true)} />
+          </StyledTooltip>
         </Hidden>
         <DrawerBox
           open={participantState["right"]}

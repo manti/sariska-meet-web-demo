@@ -27,6 +27,7 @@ import {
   SPEAKER,
   WHITEBOARD,
   s3,
+  streamingMode,
 } from "../../../constants";
 import LiveStreamDialog from "../LiveStreamDialog";
 import VirtualBackground from "../VirtualBackground";
@@ -38,7 +39,7 @@ import { authorizeDropbox } from "../../../utils/dropbox-apis";
 import SettingsBox from "../../meeting/Settings";
 import classnames from "classnames";
 import DrawerBox from "../DrawerBox";
-import { isMobileOrTab } from "../../../utils";
+import { isMobileOrTab, startStreamingInSRSMode, stopStreamingInSRSMode } from "../../../utils";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -271,11 +272,23 @@ export default function MoreAction({
         autoHide: false,
       })
     );
-    const session = await conference.startRecording({
-      mode: SariskaMediaTransport.constants.recording.mode.STREAM,
-      streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
-    });
-    streamingSession.current = session;
+    if(streamingMode === 'srs'){
+       const streamingResponse = await startStreamingInSRSMode('cvc');
+       console.log('streamingResponse', streamingResponse);
+       if(streamingResponse.started){
+          conference.setLocalParticipantProperty("streaming", true);
+            dispatch(
+              showSnackbar({ autoHide: true, message: "Live streaming started" })
+            );
+          action({ key: "streaming", value: true }); 
+       }
+    }else{
+      const session = await conference.startRecording({
+        mode: SariskaMediaTransport.constants.recording.mode.STREAM,
+        streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
+      });
+      streamingSession.current = session;
+    }
     setOpenLivestreamDialog(false);
   };
 
@@ -304,11 +317,24 @@ export default function MoreAction({
     const streamName =
       selectedStream.result.items[0]?.cdn?.ingestionInfo?.streamName;
     setOpenLivestreamDialog(false);
-    const session = await conference.startRecording({
-      mode: SariskaMediaTransport.constants.recording.mode.STREAM,
-      streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
-    });
-    streamingSession.current = session;
+
+    if(streamingMode === 'srs'){
+      const streamingResponse = await startStreamingInSRSMode('cvc');
+      console.log('streamingResponse', streamingResponse);
+       if(streamingResponse.started){
+          conference.setLocalParticipantProperty("streaming", true);
+            dispatch(
+              showSnackbar({ autoHide: true, message: "Live streaming started" })
+            );
+          action({ key: "streaming", value: true }); 
+       } 
+    }else{
+      const session = await conference.startRecording({
+        mode: SariskaMediaTransport.constants.recording.mode.STREAM,
+        streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
+      });
+      streamingSession.current = session;
+    }
   };
 
   const stopStreaming = async () => {
@@ -324,9 +350,21 @@ export default function MoreAction({
         })
       );
     }
-    await conference.stopRecording(
-      localStorage.getItem("streaming_session_id")
-    );
+    if(streamingMode === 'srs'){
+     const streamingResponse = await stopStreamingInSRSMode('cvc');
+     console.log('streamingResponsestop', streamingResponse);
+      if(streamingResponse.started){
+          conference.removeLocalParticipantProperty("streaming");
+            dispatch(
+              showSnackbar({ autoHide: true, message: "Live streaming stopped" })
+            );
+          action({ key: "streaming", value: false });
+      }
+    }else{
+      await conference.stopRecording(
+        localStorage.getItem("streaming_session_id")
+      );
+    }
   };
 
   const startRecording = async () => {
