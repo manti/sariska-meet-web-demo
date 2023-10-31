@@ -209,6 +209,7 @@ const VideoBox = ({
       }
       return `${(videoStreamHeight * 16) / 9}px`
     }
+
   return (
     <Box
       style={{ width: `${width}px`, height: `${height}px` }}

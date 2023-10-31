@@ -178,7 +178,7 @@ const togglePinParticipant = (id) => {
 }
 
 const getAvatarColor =  (id)=> {
-    return conference.participants[id]?._identity?.user?.avatar || profile?.color;
+    return conference.participants.get(id)?._identity?.user?.avatar || profile?.color;
 }
 
   return (

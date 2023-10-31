@@ -40,7 +40,7 @@ const SpeakerLayout = ({dominantSpeakerId}) => {
         isPresenter = false;
     }
     participantTracks = remoteTracks[largeVideoId];
-    participantDetails =  conference.participants[largeVideoId]?._identity?.user; 
+    participantDetails =  conference.participants.get(largeVideoId)?._identity?.user; 
 
     if (largeVideoId === conference.myUserId()){
         participantTracks = localTracks;
@@ -75,6 +75,7 @@ const SpeakerLayout = ({dominantSpeakerId}) => {
         viewportWidth = viewportWidth - 48; 
         justifyContent = "space-evenly";
     }
+    
     return (
         <Box style={{justifyContent}}  className={activeClasses} >
             <VideoBox

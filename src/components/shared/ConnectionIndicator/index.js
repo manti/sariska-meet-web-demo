@@ -131,7 +131,7 @@ const ConnectionIndicator = ({ participantId }) => {
       ? conference.connectionQuality._localStats
       : conference.connectionQuality._remoteStats[participantId] || {};
   const connectionStatus =
-    conference.participants[participantId]?.getConnectionStatus();
+    conference.participants.get(participantId)?.getConnectionStatus();
 
   const connectionSvgIcon = (
     <SignalCellularAltIcon  className={classes.icon} />
