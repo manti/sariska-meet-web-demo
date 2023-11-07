@@ -153,6 +153,7 @@ export default function MoreAction({
   const classes = useStyles();
   const conference = useSelector((state) => state.conference);
   const layout = useSelector((state) => state.layout);
+  const profile = useSelector((state) => state.profile);
 
   const dispatch = useDispatch();
   const recordingSession = useRef(null);
@@ -273,7 +274,7 @@ export default function MoreAction({
       })
     );
     if(streamingMode === 'srs'){
-       const streamingResponse = await startStreamingInSRSMode('cvc');
+       const streamingResponse = await startStreamingInSRSMode(profile.meetingTitle);
        console.log('streamingResponse', streamingResponse);
        if(streamingResponse.started){
           conference.setLocalParticipantProperty("streaming", true);
@@ -319,7 +320,7 @@ export default function MoreAction({
     setOpenLivestreamDialog(false);
 
     if(streamingMode === 'srs'){
-      const streamingResponse = await startStreamingInSRSMode('cvc');
+      const streamingResponse = await startStreamingInSRSMode(profile.meetingTitle);
       console.log('streamingResponse', streamingResponse);
        if(streamingResponse.started){
           conference.setLocalParticipantProperty("streaming", true);
@@ -351,7 +352,7 @@ export default function MoreAction({
       );
     }
     if(streamingMode === 'srs'){
-     const streamingResponse = await stopStreamingInSRSMode('cvc');
+     const streamingResponse = await stopStreamingInSRSMode(profile.meetingTitle);
      console.log('streamingResponsestop', streamingResponse);
       if(streamingResponse.started){
           conference.removeLocalParticipantProperty("streaming");
