@@ -25,7 +25,9 @@ const useStyles = makeStyles((theme) => ({
     color: color.white,
     borderColor: color.primaryLight,
     marginBottom: '16px',
-    marginLeft: '8px'
+    marginLeft: '8px',
+    textTransform: 'capitalize',
+    width: '100%'
   }
 }));
 
@@ -41,7 +43,7 @@ const LiveStreamingDetails = ({featureStates, stopStreaming, startStreaming, str
     dispatch(showNotification({
         message: "successfully copied",
         severity: "info",
-        autoHide: true
+        autoHide: true,
     }))
 }
 
