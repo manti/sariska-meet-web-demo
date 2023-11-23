@@ -8,7 +8,7 @@ import {
   Tooltip,
   Typography,
 } from "@material-ui/core";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import SariskaMediaTransport from "sariska-media-transport";
 import { color } from "../../../assets/styles/_color";
 import { useHistory } from "react-router-dom";
@@ -59,6 +59,8 @@ import {
   formatAMPM,
   isFullscreen,
   requestFullscreen,
+  startStreamingInSRSMode,
+  stopStreamingInSRSMode,
 } from "../../../utils";
 import classNames from "classnames";
 import ParticipantDetails from "../../shared/ParticipantDetails";
@@ -71,6 +73,9 @@ import { addSubtitle } from "../../../store/actions/subtitle";
 import { showSnackbar } from "../../../store/actions/snackbar";
 import StyledTooltip from "../../shared/StyledTooltip";
 import LiveStreamingDetails from "../../shared/LiveStreamingDetails";
+import { showNotification } from "../../../store/actions/notification";
+import googleApi from "../../../utils/google-apis";
+import LiveStreamDialog from "../../shared/LiveStreamDialog";
 
 const StyledBadge = withStyles((theme) => ({
   badge: {
@@ -295,7 +300,12 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     right: false,
   });
 
+  const [openLivestreamDialog, setOpenLivestreamDialog] = useState(false);
+  const [broadcasts, setBroadcasts] = useState([]);
+  const [streamingUrls, setStreamingUrls] = useState([]);
+
   const skipResize = false;
+  const streamingSession = useRef(null);
 
   const action = (actionData) => {
     featureStates[actionData.key] = actionData.value;
@@ -378,6 +388,164 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     setRaiseHand(false);
   };
 
+  const startStreaming = async () => {
+    if (featureStates.streaming) {
+      return;
+    }
+
+    if (conference?.getRole() === "none") {
+      return dispatch(
+        showNotification({
+          severity: "info",
+          autoHide: true,
+          message: "You are not moderator!!",
+        })
+      );
+    }
+
+    await googleApi.signInIfNotSignedIn();
+    let youtubeBroadcasts;
+
+    try {
+      youtubeBroadcasts = await googleApi.requestAvailableYouTubeBroadcasts();
+    } catch (e) {
+      dispatch(
+        showNotification({
+          autoHide: true,
+          message: e?.result?.error?.message,
+          severity: "info",
+        })
+      );
+      return;
+    }
+
+    if (youtubeBroadcasts.status !== 200) {
+      dispatch(
+        showNotification({
+          autoHide: true,
+          message: "Could not fetch YouTube broadcasts",
+          severity: "info",
+        })
+      );
+    }
+    setBroadcasts(youtubeBroadcasts.result.items);
+    setOpenLivestreamDialog(true);
+  };
+
+  const createLiveStream = async () => {
+    const title = `test__${Date.now()}`;
+    const resposne = await googleApi.createLiveStreams(title);
+
+    const streamName = resposne.cdn?.ingestionInfo?.streamName;
+    if (!streamName) {
+      return;
+    }
+
+    dispatch(
+      showSnackbar({
+        severity: "info",
+        message: "Starting Live Streaming",
+        autoHide: false,
+      })
+    );
+    if(streamingMode === 'srs'){
+       const streamingResponse = await startStreamingInSRSMode(profile.meetingTitle);
+       if(streamingResponse.started){
+          conference.setLocalParticipantProperty("streaming", true);
+            dispatch(
+              showSnackbar({ autoHide: true, message: "Live streaming started" })
+            );
+          action({ key: "streaming", value: true }); 
+       }
+    }else{
+      const session = await conference.startRecording({
+        mode: SariskaMediaTransport.constants.recording.mode.STREAM,
+        streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
+      });
+      streamingSession.current = session;
+    }
+    setOpenLivestreamDialog(false);
+  };
+
+  const selectedBroadcast = async (boundStreamID) => {
+    const selectedStream =
+      await googleApi.requestLiveStreamsForYouTubeBroadcast(boundStreamID);
+
+    if (selectedStream.status !== 200) {
+      dispatch(
+        showNotification({
+          autoHide: true,
+          message: "No live streams found",
+          severity: "error",
+        })
+      );
+      return;
+    }
+
+    dispatch(
+      showSnackbar({
+        severity: "info",
+        message: "Starting Live Streaming",
+        autoHide: false,
+      })
+    );
+    const streamName =
+      selectedStream.result.items[0]?.cdn?.ingestionInfo?.streamName;
+    setOpenLivestreamDialog(false);
+
+    if(streamingMode === 'srs'){
+      const streamingResponse = await startStreamingInSRSMode(profile.meetingTitle);
+       if(streamingResponse.started){
+        setStreamingUrls(streamingResponse);
+          conference.setLocalParticipantProperty("streaming", true);
+            dispatch(
+              showSnackbar({ autoHide: true, message: "Live streaming started" })
+            );
+          action({ key: "streaming", value: true }); 
+       } 
+    }else{
+      const session = await conference.startRecording({
+        mode: SariskaMediaTransport.constants.recording.mode.STREAM,
+        streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
+      });
+      streamingSession.current = session;
+    }
+  };
+
+  const stopStreaming = async () => {
+    if (!featureStates.streaming) {
+      return;
+    }
+    if (conference?.getRole() === "none") {
+      return dispatch(
+        showNotification({
+          severity: "info",
+          autoHide: true,
+          message: "You are not moderator!!",
+        })
+      );
+    }
+    if(streamingMode === 'srs'){
+     const streamingResponse = await stopStreamingInSRSMode(profile.meetingTitle);
+      if(!streamingResponse.started){
+        setStreamingUrls({});
+          conference.removeLocalParticipantProperty("streaming");
+            dispatch(
+              showSnackbar({ autoHide: true, message: "Live streaming stopped" })
+            );
+          action({ key: "streaming", value: false });
+      }
+    }else{
+      await conference.stopRecording(
+        localStorage.getItem("streaming_session_id")
+      );
+    }
+  };
+
+  const closeLiveStreamDialog = () => {
+    setOpenLivestreamDialog(false);
+  };
+
   const toggleLiveDrawer = (anchor, open) => (event) => {
     if (
       event.type === "keydown" &&
@@ -401,13 +569,13 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     <>
       <Box className={classes.participantHeader}>
         <Typography variant="h6" className={classes.title}>
-          Live Streaming
+          Live Streaming Details
         </Typography>
         <Hidden mdUp>
           <CloseIcon onClick={toggleLiveDrawer("right", false)}/>
         </Hidden>
       </Box>
-      <LiveStreamingDetails />
+      <LiveStreamingDetails streamingUrls={streamingUrls} featureStates={featureStates} stopStreaming={stopStreaming} startStreaming={startStreaming} />
     </>
   );
 
@@ -704,7 +872,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
             action({ key: "streaming", value: true });
             localStorage.setItem("streaming_session_id", data?._sessionID);
           }
-
+          
           if (streamingMode !== 'srs' && data._statusFromJicofo === "off" && data._mode === "stream") {
             conference.removeLocalParticipantProperty("streaming");
             dispatch(
@@ -774,10 +942,10 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         <StyledTooltip title="Leave Call">
           <CallEndIcon onClick={leaveConference} className={classes.end} />
         </StyledTooltip>
-        <StyledTooltip title="Go Live">
+        <StyledTooltip title={"Go Live"}>
           <Box className={classes.liveBox} onClick={toggleLiveDrawer("right", true)} >          
             <FiberManualRecordIcon className={classes.dot} />
-            <Button className={classes.live}>Live</Button>
+            <Button className={classes.live}>{"Go Live"}</Button>
           </Box>
         </StyledTooltip>
         </Box>
@@ -788,6 +956,13 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           {liveList("right")}
         </DrawerBox>
       </Hidden>
+      <LiveStreamDialog
+        close={closeLiveStreamDialog}
+        createLiveStream={createLiveStream}
+        open={openLivestreamDialog}
+        broadcasts={broadcasts}
+        selectedBroadcast={selectedBroadcast}
+      />
       <Box className={classes.permissions}>
         <StyledTooltip
           title={

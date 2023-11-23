@@ -115,3 +115,16 @@ export const RECORDING_ERROR_CONSTANTS  = {
 };
 
 export const PARTICIPANTS_VISIBLE_ON_MOBILE = 7;
+
+export const STREAMING_URL_KEYS = [
+    'dash_url',
+    'flv_url',
+    'hds_url',
+    'hls_master_url',
+    'hls_url',
+    'low_latency_hls_master_url',
+    'low_latency_hls_url',
+    'rtmp_url',
+    'srt_url',
+    'vod_url'
+  ]

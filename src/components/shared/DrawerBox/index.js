@@ -30,6 +30,7 @@ export default function DrawerBox({ children, open, onClose, top }) {
     list: {
       padding: theme.spacing(3, 3, 3, 3),
       height: "93%",
+      overflowY:'auto'
     },
   }));
   const classes = useStyles();

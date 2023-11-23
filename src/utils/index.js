@@ -94,8 +94,7 @@ export async function startStreamingInSRSMode(roomName) {
     };
     try {
         const response = await fetch(LIVE_STREAMING_START_URL, body);
-        console.log('response startStreamingInSRSMode', response);
-        if (response.started) {
+        if (response.ok) {
             const json = await response.json();
             return json;
         } else {
@@ -119,7 +118,7 @@ export async function stopStreamingInSRSMode(roomName) {
     };
     try {
         const response = await fetch(LIVE_STREAMING_STOP_URL, body);
-        if (!response.started) {
+        if (response.ok) {
             const json = await response.json();
             return json;
         } else {
