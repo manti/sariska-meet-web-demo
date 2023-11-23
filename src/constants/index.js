@@ -6,12 +6,17 @@ export const s3 = {
     }
 }
 
+export const streamingMode = 'srs' // or 'jibri'
+
 export const GOOGLE_API_CLIENT_LIBRARY_URL = 'https://apis.google.com/js/api.js';
+export const GOOGLE_API_CLIENT_ID = "621897095595-k7tr68mgfrhm1935cqdq5l2vg8u7ltu8.apps.googleusercontent.com";
 export const API_URL_BROADCAST_STREAMS = 'https://content.googleapis.com/youtube/v3/liveStreams?part=id%2Csnippet%2Ccdn%2Cstatus&id=';
 export const API_URL_LIVE_BROADCASTS = 'https://content.googleapis.com/youtube/v3/liveBroadcasts?broadcastType=all&mine=true&part=id%2Csnippet%2CcontentDetails%2Cstatus';
 export const DISCOVERY_DOCS = [ 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest' ];
 export const CREATE_YOUTUBE_LIVE_STREAMS = "https://www.googleapis.com/youtube/v3/liveStreams";
 export const CREATE_YOUTUBE_LIVE_BROADCASTS = "https://www.googleapis.com/youtube/v3/liveBroadcasts";
+export const LIVE_STREAMING_START_URL = `${process.env.REACT_APP_API_SERVICE_HOST}terraform/v1/hooks/srs/startRecording`;
+export const LIVE_STREAMING_STOP_URL = `${process.env.REACT_APP_API_SERVICE_HOST}terraform/v1/hooks/srs/stopRecording`;
 export const GET_PRESENTATION_STATUS = "GET_PRESENTATION_STATUS";
 export const RECEIVED_PRESENTATION_STATUS = "RECEIVED_PRESENTATION_STATUS";
 export const GOOGLE_API_STATES = {
@@ -110,3 +115,16 @@ export const RECORDING_ERROR_CONSTANTS  = {
 };
 
 export const PARTICIPANTS_VISIBLE_ON_MOBILE = 7;
+
+export const STREAMING_URL_KEYS = [
+    'dash_url',
+    'flv_url',
+    'hds_url',
+    'hls_master_url',
+    'hls_url',
+    'low_latency_hls_master_url',
+    'low_latency_hls_url',
+    'rtmp_url',
+    'srt_url',
+    'vod_url'
+  ]

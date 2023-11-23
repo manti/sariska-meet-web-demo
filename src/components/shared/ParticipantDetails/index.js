@@ -255,7 +255,7 @@ const getAvatarColor =  (id)=> {
             <Typography>Meeting Link</Typography>
             <Typography variant="caption">{window.location.href}</Typography>
           </Box>
-          <CopyMeetingLink />
+          <CopyMeetingLink textToCopy = {window.location.href} />
         </Box>
       </Box>
     </Box>

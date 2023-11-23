@@ -10,35 +10,36 @@ import { Box, Drawer, Hidden } from "@material-ui/core";
 import CopyLink from "../CopyLink";
 import { useDispatch, useSelector } from "react-redux";
 import AlbumIcon from "@material-ui/icons/Album";
-import PublicIcon from "@material-ui/icons/Public";
+//import PublicIcon from "@material-ui/icons/Public";
 import FlipToFrontIcon from "@material-ui/icons/FlipToFront";
 import DescriptionIcon from "@material-ui/icons/Description";
 import SettingsIcon from "@material-ui/icons/Settings";
 import CreateIcon from "@material-ui/icons/Create";
 import CloseIcon from "@material-ui/icons/Close";
-import GroupIcon from "@material-ui/icons/Group";
-import ChatIcon from "@material-ui/icons/Chat";
-import ViewListIcon from "@material-ui/icons/ViewList";
-import ViewComfyIcon from "@material-ui/icons/ViewComfy";
+// import GroupIcon from "@material-ui/icons/Group";
+// import ChatIcon from "@material-ui/icons/Chat";
+// import ViewListIcon from "@material-ui/icons/ViewList";
+// import ViewComfyIcon from "@material-ui/icons/ViewComfy";
 import {
-  DROPBOX_APP_KEY,
+  //DROPBOX_APP_KEY,
   PRESENTATION,
   SHARED_DOCUMENT,
   SPEAKER,
   WHITEBOARD,
   s3,
+  //streamingMode,
 } from "../../../constants";
-import LiveStreamDialog from "../LiveStreamDialog";
+//import LiveStreamDialog from "../LiveStreamDialog";
 import VirtualBackground from "../VirtualBackground";
 import { showSnackbar } from "../../../store/actions/snackbar";
 import { showNotification } from "../../../store/actions/notification";
-import googleApi from "../../../utils/google-apis";
+//import googleApi from "../../../utils/google-apis";
 import SariskaMediaTransport from "sariska-media-transport/dist/esm/SariskaMediaTransport";
-import { authorizeDropbox } from "../../../utils/dropbox-apis";
+//import { authorizeDropbox } from "../../../utils/dropbox-apis";
 import SettingsBox from "../../meeting/Settings";
 import classnames from "classnames";
 import DrawerBox from "../DrawerBox";
-import { isMobileOrTab } from "../../../utils";
+import { isMobileOrTab, startStreamingInSRSMode, stopStreamingInSRSMode } from "../../../utils";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -152,10 +153,11 @@ export default function MoreAction({
   const classes = useStyles();
   const conference = useSelector((state) => state.conference);
   const layout = useSelector((state) => state.layout);
+  const profile = useSelector((state) => state.profile);
 
   const dispatch = useDispatch();
   const recordingSession = useRef(null);
-  const streamingSession = useRef(null);
+ // const streamingSession = useRef(null);
 
   const [state, setState] = React.useState({
     right: false,
@@ -168,8 +170,8 @@ export default function MoreAction({
     right: false,
   });
 
-  const [openLivestreamDialog, setOpenLivestreamDialog] = useState(false);
-  const [broadcasts, setBroadcasts] = useState([]);
+ // const [openLivestreamDialog, setOpenLivestreamDialog] = useState(false);
+ // const [broadcasts, setBroadcasts] = useState([]);
 
   const toggleBackgroundDrawer = (anchor, open) => (event) => {
     if (
@@ -211,123 +213,171 @@ export default function MoreAction({
     );
   };
 
-  const startStreaming = async () => {
-    if (featureStates.streaming) {
-      return;
-    }
+  // const startStreaming = async () => {
+  //   console.log('startStreaming')
+  //   if (featureStates.streaming) {
+  //     return;
+  //   }
 
-    if (conference?.getRole() === "none") {
-      return dispatch(
-        showNotification({
-          severity: "info",
-          autoHide: true,
-          message: "You are not moderator!!",
-        })
-      );
-    }
+  //   console.log(' af startStreaming')
+  //   if (conference?.getRole() === "none") {
+  //     return dispatch(
+  //       showNotification({
+  //         severity: "info",
+  //         autoHide: true,
+  //         message: "You are not moderator!!",
+  //       })
+  //     );
+  //   }
 
-    await googleApi.signInIfNotSignedIn();
-    let youtubeBroadcasts;
+  //   console.log(' aftr startStreaming');
+  //   await googleApi.signInIfNotSignedIn();
+  //   let youtubeBroadcasts;
 
-    try {
-      youtubeBroadcasts = await googleApi.requestAvailableYouTubeBroadcasts();
-    } catch (e) {
-      dispatch(
-        showNotification({
-          autoHide: true,
-          message: e?.result?.error?.message,
-          severity: "info",
-        })
-      );
-      return;
-    }
+  //   console.log(' aftr signInIfNotSignedIn');
+  //   try {
+  //     youtubeBroadcasts = await googleApi.requestAvailableYouTubeBroadcasts();
+  //     console.log('requestAvailableYouTubeBroadcasts')
+  //   } catch (e) {
+  //     console.log('e is error')
+  //     dispatch(
+  //       showNotification({
+  //         autoHide: true,
+  //         message: e?.result?.error?.message,
+  //         severity: "info",
+  //       })
+  //     );
+  //     return;
+  //   }
 
-    if (youtubeBroadcasts.status !== 200) {
-      dispatch(
-        showNotification({
-          autoHide: true,
-          message: "Could not fetch YouTube broadcasts",
-          severity: "info",
-        })
-      );
-    }
-    setBroadcasts(youtubeBroadcasts.result.items);
-    setOpenLivestreamDialog(true);
-  };
+  //   if (youtubeBroadcasts.status !== 200) {
+  //     dispatch(
+  //       showNotification({
+  //         autoHide: true,
+  //         message: "Could not fetch YouTube broadcasts",
+  //         severity: "info",
+  //       })
+  //     );
+  //   }
+  //   console.log('youtubeve')
+  //   setBroadcasts(youtubeBroadcasts.result.items);
+  //   setOpenLivestreamDialog(true);
+  //   console.log('youtube')
+  // };
 
-  const createLiveStream = async () => {
-    const title = `test__${Date.now()}`;
-    const resposne = await googleApi.createLiveStreams(title);
+  // const createLiveStream = async () => {
+  //   console.log('createLiveStream')
+  //   const title = `test__${Date.now()}`;
+  //   const resposne = await googleApi.createLiveStreams(title);
 
-    const streamName = resposne.cdn?.ingestionInfo?.streamName;
-    if (!streamName) {
-      return;
-    }
+  //   const streamName = resposne.cdn?.ingestionInfo?.streamName;
+  //   if (!streamName) {
+  //     return;
+  //   }
 
-    dispatch(
-      showSnackbar({
-        severity: "info",
-        message: "Starting Live Streaming",
-        autoHide: false,
-      })
-    );
-    const session = await conference.startRecording({
-      mode: SariskaMediaTransport.constants.recording.mode.STREAM,
-      streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
-    });
-    streamingSession.current = session;
-    setOpenLivestreamDialog(false);
-  };
+  //   dispatch(
+  //     showSnackbar({
+  //       severity: "info",
+  //       message: "Starting Live Streaming",
+  //       autoHide: false,
+  //     })
+  //   );
+  //   if(streamingMode === 'srs'){
+  //      const streamingResponse = await startStreamingInSRSMode(profile.meetingTitle);
+  //      console.log('streamingResponse', streamingResponse);
+  //      if(streamingResponse.started){
+  //         conference.setLocalParticipantProperty("streaming", true);
+  //           dispatch(
+  //             showSnackbar({ autoHide: true, message: "Live streaming started" })
+  //           );
+  //         action({ key: "streaming", value: true }); 
+  //      }
+  //   }else{
+  //     console.log('startRecording f')
+  //     const session = await conference.startRecording({
+  //       mode: SariskaMediaTransport.constants.recording.mode.STREAM,
+  //       streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
+  //     });
+  //     streamingSession.current = session;
+  //   }
+  //   setOpenLivestreamDialog(false);
+  // };
 
-  const selectedBroadcast = async (boundStreamID) => {
-    const selectedStream =
-      await googleApi.requestLiveStreamsForYouTubeBroadcast(boundStreamID);
+  // const selectedBroadcast = async (boundStreamID) => {
+  //   console.log('selectedBroadcast')
+  //   const selectedStream =
+  //     await googleApi.requestLiveStreamsForYouTubeBroadcast(boundStreamID);
 
-    if (selectedStream.status !== 200) {
-      dispatch(
-        showNotification({
-          autoHide: true,
-          message: "No live streams found",
-          severity: "error",
-        })
-      );
-      return;
-    }
+  //   if (selectedStream.status !== 200) {
+  //     dispatch(
+  //       showNotification({
+  //         autoHide: true,
+  //         message: "No live streams found",
+  //         severity: "error",
+  //       })
+  //     );
+  //     return;
+  //   }
 
-    dispatch(
-      showSnackbar({
-        severity: "info",
-        message: "Starting Live Streaming",
-        autoHide: false,
-      })
-    );
-    const streamName =
-      selectedStream.result.items[0]?.cdn?.ingestionInfo?.streamName;
-    setOpenLivestreamDialog(false);
-    const session = await conference.startRecording({
-      mode: SariskaMediaTransport.constants.recording.mode.STREAM,
-      streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
-    });
-    streamingSession.current = session;
-  };
+  //   dispatch(
+  //     showSnackbar({
+  //       severity: "info",
+  //       message: "Starting Live Streaming",
+  //       autoHide: false,
+  //     })
+  //   );
+  //   const streamName =
+  //     selectedStream.result.items[0]?.cdn?.ingestionInfo?.streamName;
+  //   setOpenLivestreamDialog(false);
 
-  const stopStreaming = async () => {
-    if (!featureStates.streaming) {
-      return;
-    }
-    if (conference?.getRole() === "none") {
-      return dispatch(
-        showNotification({
-          severity: "info",
-          autoHide: true,
-          message: "You are not moderator!!",
-        })
-      );
-    }
-    await conference.stopRecording(
-      localStorage.getItem("streaming_session_id")
-    );
-  };
+  //   if(streamingMode === 'srs'){
+  //     const streamingResponse = await startStreamingInSRSMode(profile.meetingTitle);
+  //     console.log('streamingResponseer', streamingResponse);
+  //      if(streamingResponse.started){
+  //         conference.setLocalParticipantProperty("streaming", true);
+  //           dispatch(
+  //             showSnackbar({ autoHide: true, message: "Live streaming started" })
+  //           );
+  //         action({ key: "streaming", value: true }); 
+  //      } 
+  //   }else{
+  //     const session = await conference.startRecording({
+  //       mode: SariskaMediaTransport.constants.recording.mode.STREAM,
+  //       streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
+  //     });
+  //     streamingSession.current = session;
+  //   }
+  // };
+
+  // const stopStreaming = async () => {
+  //   if (!featureStates.streaming) {
+  //     return;
+  //   }
+  //   if (conference?.getRole() === "none") {
+  //     return dispatch(
+  //       showNotification({
+  //         severity: "info",
+  //         autoHide: true,
+  //         message: "You are not moderator!!",
+  //       })
+  //     );
+  //   }
+  //   if(streamingMode === 'srs'){
+  //    const streamingResponse = await stopStreamingInSRSMode(profile.meetingTitle);
+  //    console.log('streamingResponsestop', streamingResponse);
+  //     if(!streamingResponse.started){
+  //         conference.removeLocalParticipantProperty("streaming");
+  //           dispatch(
+  //             showSnackbar({ autoHide: true, message: "Live streaming stopped" })
+  //           );
+  //         action({ key: "streaming", value: false });
+  //     }
+  //   }else{
+  //     await conference.stopRecording(
+  //       localStorage.getItem("streaming_session_id")
+  //     );
+  //   }
+  // };
 
   const startRecording = async () => {
     if (featureStates.recording) {
@@ -459,9 +509,9 @@ export default function MoreAction({
     </Box>
   );
 
-  const closeLiveStreamDialog = () => {
-    setOpenLivestreamDialog(false);
-  };
+  // const closeLiveStreamDialog = () => {
+  //   setOpenLivestreamDialog(false);
+  // };
 
   const menuData = [
     {
@@ -477,19 +527,19 @@ export default function MoreAction({
       title: featureStates.recording ? "Stop Recording" : "Start Recording",
       onClick: featureStates.recording ? stopRecording : startRecording,
     },
-    {
-      icon: (
-        <PublicIcon
-          className={
-            featureStates.streaming
-              ? classes.stopRecording
-              : classes.startRecording
-          }
-        />
-      ),
-      title: featureStates.streaming ? "Stop Streaming" : "Start Streaming",
-      onClick: featureStates.streaming ? stopStreaming : startStreaming,
-    },
+    // {
+    //   icon: (
+    //     <PublicIcon
+    //       className={
+    //         featureStates.streaming
+    //           ? classes.stopRecording
+    //           : classes.startRecording
+    //       }
+    //     />
+    //   ),
+    //   title: featureStates.streaming ? "Stop Streaming" : "Start Streaming",
+    //   onClick: featureStates.streaming ? stopStreaming : startStreaming,
+    // },
     {
       icon: (
         <span
@@ -614,13 +664,13 @@ export default function MoreAction({
       >
         {settingsList("right")}
       </DrawerBox>
-      <LiveStreamDialog
+      {/* <LiveStreamDialog
         close={closeLiveStreamDialog}
         createLiveStream={createLiveStream}
         open={openLivestreamDialog}
         broadcasts={broadcasts}
         selectedBroadcast={selectedBroadcast}
-      />
+      /> */}
     </>
   );
 }

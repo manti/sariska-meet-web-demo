@@ -11,24 +11,27 @@ import { useDispatch, useSelector } from 'react-redux';
 import { showNotification } from '../../../store/actions/notification';
 
 
-const useStyles = makeStyles((theme) => ({
-    iconContainer: {
-        padding: '8px 12px 4px 12px',
-        border: `1px solid transparent`,
-        background: color.secondary,
-        borderRadius: '48px',
-        "&:hover": {
-          opacity: '0.8',
-          cursor: 'pointer',
-          border: `1px solid ${color.primaryLight}`,
-          background: color.secondaryDark,
-        }
-      },
-}));
-const CopyMeetingLink = () => {
+
+const CopyMeetingLink = ({textToCopy, iconColor}) => {
+    const useStyles = makeStyles((theme) => ({
+        iconContainer: {
+            padding: '8px 12px 4px 12px',
+            border: `1px solid transparent`,
+            background: color.secondary,
+            borderRadius: '48px',
+            "&:hover": {
+              opacity: '0.8',
+              cursor: 'pointer',
+              border: `1px solid ${color.primaryLight}`,
+              background: color.secondaryDark,
+            }
+          },
+          icon: {
+            color: iconColor
+          }
+    }));
     const classes = useStyles();
     const [copySuccess, setCopySuccess] = useState('');
-    const textToCopy = window.location.href;
     const notification = useSelector(state => state.notification);
     const dispatch = useDispatch();
 
