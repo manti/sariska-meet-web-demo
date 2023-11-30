@@ -575,7 +575,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
   const handleStreamKeyChange=(e)=>{
     setStreamKey(e.target.value);
   }
-console.log('stream', streamKey)
+  
   const liveList = (anchor) => (
     <>
       <Box className={classes.participantHeader}>
