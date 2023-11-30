@@ -201,7 +201,7 @@ const useStyles = makeStyles((theme) => ({
   },
   live: {
     color: color.red,
-    padding: '6px 0',
+    padding: '6px 6px 6px 0',
     minWidth: '36px',
   },
   subIcon: {
