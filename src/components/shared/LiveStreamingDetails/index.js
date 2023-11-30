@@ -10,6 +10,7 @@ import CopyMeetingLink from "../CopyMeetingLink";
 import { color } from "../../../assets/styles/_color";
 import { useDispatch, useSelector } from "react-redux";
 import { showNotification } from "../../../store/actions/notification";
+import SearchBox from "../SearchBox";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -22,16 +23,23 @@ const useStyles = makeStyles((theme) => ({
     }
   },
   streamingButton:{
+    marginTop: '16px',
     color: color.white,
-    borderColor: color.primaryLight,
+    background: color.mainGradient,
     marginBottom: '16px',
-    marginLeft: '8px',
+  //  marginLeft: '8px',
     textTransform: 'capitalize',
-    width: '100%'
+    width: '100%',
+    borderRadius: '10px',
+    paddingTop: '10px',
+    paddingBottom: '10px',
+    '&:hover': {
+      opacity: '0.8'
+    }
   }
 }));
 
-const LiveStreamingDetails = ({featureStates, stopStreaming, startStreaming, streamingUrls}) => {
+const LiveStreamingDetails = ({featureStates, stopStreaming, startStreaming, streamingUrls, streamKey, handleStreamKeyChange}) => {
   const classes = useStyles();
   const [copySuccess, setCopySuccess] = useState('');
   const notification = useSelector(state => state.notification);
@@ -49,7 +57,14 @@ const LiveStreamingDetails = ({featureStates, stopStreaming, startStreaming, str
 
   return (
     <Box className={classes.root}>
-      <Box sx={{mt: 4}}>
+      <Box sx={{mt: 1}}>
+      <SearchBox
+          placeholder={"Enter You Tube Stream key"}
+          value={streamKey}
+          id="streamKey"
+          name="streamKey"
+          handleChange={handleStreamKeyChange}
+        />
         <Button
           variant="outlined"
           onClick={featureStates.streaming ? stopStreaming : startStreaming}
