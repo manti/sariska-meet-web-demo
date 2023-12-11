@@ -201,7 +201,7 @@ const useStyles = makeStyles((theme) => ({
   },
   live: {
     color: color.red,
-    padding: '6px 0',
+    padding: '6px 6px 6px 0',
     minWidth: '36px',
   },
   subIcon: {
@@ -303,6 +303,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
   const [openLivestreamDialog, setOpenLivestreamDialog] = useState(false);
   const [broadcasts, setBroadcasts] = useState([]);
   const [streamingUrls, setStreamingUrls] = useState([]);
+  const [streamKey, setStreamKey] = useState('');
 
   const skipResize = false;
   const streamingSession = useRef(null);
@@ -402,34 +403,52 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         })
       );
     }
-
-    await googleApi.signInIfNotSignedIn();
-    let youtubeBroadcasts;
-
-    try {
-      youtubeBroadcasts = await googleApi.requestAvailableYouTubeBroadcasts();
-    } catch (e) {
+    if(streamingMode === 'srs'){
       dispatch(
-        showNotification({
-          autoHide: true,
-          message: e?.result?.error?.message,
+        showSnackbar({
           severity: "info",
+          message: "Starting Live Streaming",
+          autoHide: false,
         })
       );
-      return;
-    }
+      const streamingResponse = await startStreamingInSRSMode(profile.meetingTitle, streamKey);
+       if(streamingResponse.started){
+        setStreamingUrls(streamingResponse);
+          conference.setLocalParticipantProperty("streaming", true);
+            dispatch(
+              showSnackbar({ autoHide: true, message: "Live streaming started" })
+            );
+          action({ key: "streaming", value: true }); 
+       } 
+    }else{
+      await googleApi.signInIfNotSignedIn();
+      let youtubeBroadcasts;
 
-    if (youtubeBroadcasts.status !== 200) {
-      dispatch(
-        showNotification({
-          autoHide: true,
-          message: "Could not fetch YouTube broadcasts",
-          severity: "info",
-        })
-      );
+      try {
+        youtubeBroadcasts = await googleApi.requestAvailableYouTubeBroadcasts();
+      } catch (e) {
+        dispatch(
+          showNotification({
+            autoHide: true,
+            message: e?.result?.error?.message,
+            severity: "info",
+          })
+        );
+        return;
+      }
+
+      if (youtubeBroadcasts.status !== 200) {
+        dispatch(
+          showNotification({
+            autoHide: true,
+            message: "Could not fetch YouTube broadcasts",
+            severity: "info",
+          })
+        );
+      }
+      setBroadcasts(youtubeBroadcasts.result.items);
+      setOpenLivestreamDialog(true);
     }
-    setBroadcasts(youtubeBroadcasts.result.items);
-    setOpenLivestreamDialog(true);
   };
 
   const createLiveStream = async () => {
@@ -493,23 +512,11 @@ const ActionButtons = ({ dominantSpeakerId }) => {
       selectedStream.result.items[0]?.cdn?.ingestionInfo?.streamName;
     setOpenLivestreamDialog(false);
 
-    if(streamingMode === 'srs'){
-      const streamingResponse = await startStreamingInSRSMode(profile.meetingTitle);
-       if(streamingResponse.started){
-        setStreamingUrls(streamingResponse);
-          conference.setLocalParticipantProperty("streaming", true);
-            dispatch(
-              showSnackbar({ autoHide: true, message: "Live streaming started" })
-            );
-          action({ key: "streaming", value: true }); 
-       } 
-    }else{
       const session = await conference.startRecording({
         mode: SariskaMediaTransport.constants.recording.mode.STREAM,
         streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
       });
       streamingSession.current = session;
-    }
   };
 
   const stopStreaming = async () => {
@@ -565,6 +572,10 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     setParticipantState({ ...participantState, [anchor]: open });
   };
 
+  const handleStreamKeyChange=(e)=>{
+    setStreamKey(e.target.value);
+  }
+  
   const liveList = (anchor) => (
     <>
       <Box className={classes.participantHeader}>
@@ -575,7 +586,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           <CloseIcon onClick={toggleLiveDrawer("right", false)}/>
         </Hidden>
       </Box>
-      <LiveStreamingDetails streamingUrls={streamingUrls} featureStates={featureStates} stopStreaming={stopStreaming} startStreaming={startStreaming} />
+      <LiveStreamingDetails streamingUrls={streamingUrls} featureStates={featureStates} stopStreaming={stopStreaming} startStreaming={startStreaming} handleStreamKeyChange={handleStreamKeyChange} streamKey={streamKey}/>
     </>
   );
 
