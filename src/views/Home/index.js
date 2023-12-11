@@ -201,6 +201,8 @@ const Home = () => {
     const [loading, setLoading] = useState(true);
     const [updateCalenderLoader, setUpdateCalenderLoader] = useState(null);
     const iAmRecorder = window.location.hash.indexOf("iAmRecorder") >= 0;
+    const iAmTorture = window.location.hash.indexOf("iAmTorture") >= 0;
+
 
     const signInIfNotSignedIn = async () => {
         await googleApi.signInIfNotSignedIn();
@@ -295,8 +297,9 @@ const Home = () => {
             <Grid className={classes.gridContainer} container>
                 <Grid item md={12} className={classes.gridChild}>
                     <Box >
-                        {
-                            localTracks?.length > 0 && <LobbyRoom tracks={localTracks}/>
+                        { iAmTorture ?
+                            localTracks?.length > 0 && <LobbyRoom tracks={localTracks}/> :
+                            <LobbyRoom tracks={localTracks}/> 
                         }
                     </Box>
                 </Grid>
