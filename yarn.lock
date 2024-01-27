@@ -11065,9 +11065,9 @@ sanitize.css@^10.0.0:
   resolved "https://registry.yarnpkg.com/sanitize.css/-/sanitize.css-10.0.0.tgz#b5cb2547e96d8629a60947544665243b1dc3657a"
   integrity sha512-vTxrZz4dX5W86M6oVWVdOVe72ZiPs41Oi7Z6Km4W5Turyz28mrXSJhhEBZoRtzJWIv3833WKVwLSDWWkEfupMg==
 
-"sariska-media-transport@https://github.com/SariskaIO/sariska-media-transport.git#4.0.7":
+"sariska-media-transport@https://github.com/SariskaIO/sariska-media-transport.git#4.0.8":
   version "1.1.1"
-  resolved "https://github.com/SariskaIO/sariska-media-transport.git#76adda989a7b9002b1d76105f86b2d2720f18c3b"
+  resolved "https://github.com/SariskaIO/sariska-media-transport.git#32a41a739d651066b4783366071d2218a605de5f"
   dependencies:
     "@hapi/bourne" "^2.0.0"
     "@jitsi/js-utils" "git+https://github.com/SariskaIO/js-utils.git#1.0.2"
